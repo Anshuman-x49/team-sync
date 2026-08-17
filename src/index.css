@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+    color-scheme: dark;
+
+    --background: #141218;
+    --surface: #211f24;
+    --surface-low: #1d1b20;
+    --surface-high: #2b292f;
+    --border: #494551;
+
+    --text: #e6e0e9;
+    --text-muted: #cbc4d2;
+
+    --primary: #cfbcff;
+    --on-primary: #381e72;
+    --secondary: #cdc0e9;
+    --accent: #e7c365;
+
+    --success: #4d7c66;
+    --warning: #e7c365;
+    --error: #ffb4ab;
+}
+
+.light {
+    color-scheme: light;
+
+    --background: #fcf8ff;
+    --surface: #ffffff;
+    --surface-low: #f5f2fe;
+    --surface-high: #e9e6f3;
+    --border: #e2e8f0;
+
+    --text: #1b1b23;
+    --text-muted: #464554;
+
+    --primary: #4648d4;
+    --on-primary: #ffffff;
+    --secondary: #505f76;
+    --accent: #904900;
+
+    --success: #4d7c66;
+    --warning: #b5730e;
+    --error: #ba1a1a;
+}
+
+@theme {
+    --color-background: var(--background);
+    --color-surface: var(--surface);
+    --color-surface-low: var(--surface-low);
+    --color-surface-high: var(--surface-high);
+    --color-border: var(--border);
+
+    --color-text-main: var(--text);
+    --color-text-muted: var(--text-muted);
+
+    --color-primary: var(--primary);
+    --color-on-primary: var(--on-primary);
+    --color-secondary: var(--secondary);
+    --color-accent: var(--accent);
+
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+    --color-error: var(--error);
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hide scrollbars utility */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
