@@ -1,23 +1,34 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import {
     useEmployee,
     type Employee as EmployeeType,
     type EmployeeFilters,
     type ViewMode,
-    type EmployeeFormData,
 } from "../../hooks/useEmployee";
 import EmployeeStats from "../components/EmployeeStats";
 import EmployeeHeader from "../components/EmployeeHeader";
 import EmployeeCard from "../components/EmployeeCard";
 import EmployeeTable from "../components/EmployeeTable";
 import EmployeeDetailModal from "../components/EmployeeDetailModal";
-import EmployeeFormModal from "../components/EmployeeFormModal";
 import EmployeeDeleteDialog from "../components/EmployeeDeleteDialog";
 import EmployeeEmptyState from "../components/EmployeeEmptyState";
 import EmployeeSkeletonLoader from "../components/EmployeeSkeletonLoader";
+import EmployeePagination from "../components/EmployeePagination";
 
 const Employee = () => {
-    const { data, isPending } = useEmployee();
+    const navigate = useNavigate();
+
+    // TanStack Query with pagination & caching (fixed 20 items per page limit)
+    const {
+        data,
+        isPending,
+        isPlaceholderData,
+        page,
+        setPage,
+        limit,
+        refetch,
+    } = useEmployee(1, 20);
 
     // Local state for view mode
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -36,9 +47,6 @@ const Employee = () => {
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeType | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-    const [formEmployee, setFormEmployee] = useState<EmployeeType | null>(null);
-    const [isFormOpen, setIsFormOpen] = useState(false);
-
     const [deleteTarget, setDeleteTarget] = useState<EmployeeType | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -49,7 +57,7 @@ const Employee = () => {
         setTimeout(() => setToastMessage(null), 3000);
     };
 
-    // Extract employee array directly from API data, defaulting to an empty array []
+    // Extract employee array directly from API response, defaulting to an empty array []
     const rawEmployees: EmployeeType[] = useMemo(() => {
         if (!data) return [];
 
@@ -58,12 +66,22 @@ const Employee = () => {
         }
 
         if (typeof data === "object") {
-            const maybeArr = (data as unknown as { employees?: EmployeeType[] }).employees;
-            if (Array.isArray(maybeArr)) {
-                return maybeArr;
+            const obj = data as Record<string, unknown>;
+
+            if (Array.isArray(obj.data)) {
+                return obj.data as EmployeeType[];
             }
-            if ("name" in data && "_id" in data) {
-                return [data as EmployeeType];
+            if (Array.isArray(obj.employees)) {
+                return obj.employees as EmployeeType[];
+            }
+            if (Array.isArray(obj.results)) {
+                return obj.results as EmployeeType[];
+            }
+            if (Array.isArray(obj.result)) {
+                return obj.result as EmployeeType[];
+            }
+            if ("name" in obj && "email" in obj) {
+                return [obj as unknown as EmployeeType];
             }
         }
 
@@ -89,9 +107,8 @@ const Employee = () => {
                 const matchesEmail = emp.email?.toLowerCase().includes(q);
                 const matchesDept = emp.department?.toLowerCase().includes(q);
                 const matchesRole = emp.role?.toLowerCase().includes(q);
-                const matchesId = emp._id?.toLowerCase().includes(q);
 
-                if (!matchesName && !matchesEmail && !matchesDept && !matchesRole && !matchesId) {
+                if (!matchesName && !matchesEmail && !matchesDept && !matchesRole) {
                     return false;
                 }
             }
@@ -114,9 +131,22 @@ const Employee = () => {
         });
     }, [rawEmployees, filters]);
 
+    // Paginated employees for current page
+    const totalItems = filteredEmployees.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+    // Clamp page to valid range
+    const validPage = Math.min(Math.max(1, page), totalPages);
+
+    const paginatedEmployees = useMemo(() => {
+        const start = (validPage - 1) * limit;
+        return filteredEmployees.slice(start, start + limit);
+    }, [filteredEmployees, validPage, limit]);
+
     // Action Handlers
     const handleFilterChange = (newFilters: Partial<EmployeeFilters>) => {
         setFilters((prev) => ({ ...prev, ...newFilters }));
+        setPage(1); // Reset to page 1 on filter change
     };
 
     const handleResetFilters = () => {
@@ -128,6 +158,7 @@ const Employee = () => {
             sortBy: "name",
             sortOrder: "asc",
         });
+        setPage(1);
     };
 
     const handleViewDetail = (emp: EmployeeType) => {
@@ -136,23 +167,17 @@ const Employee = () => {
     };
 
     const handleOpenAddForm = () => {
-        setFormEmployee(null);
-        setIsFormOpen(true);
+        navigate("/home/add-employee");
     };
 
     const handleOpenEditForm = (emp: EmployeeType) => {
-        setFormEmployee(emp);
-        setIsFormOpen(true);
+        const identifier = encodeURIComponent(emp.email || emp.name || "");
+        navigate(`/home/edit-employee/${identifier}`);
     };
 
     const handleOpenDelete = (emp: EmployeeType) => {
         setDeleteTarget(emp);
         setIsDeleteOpen(true);
-    };
-
-    const handleSaveEmployee = async (formData: EmployeeFormData) => {
-        showToast(formEmployee ? `Updating employee "${formData.name}"...` : `Creating employee "${formData.name}"...`);
-        setIsFormOpen(false);
     };
 
     const handleDeleteEmployee = async () => {
@@ -162,8 +187,9 @@ const Employee = () => {
         showToast(`Employee record removed.`, "info");
     };
 
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         showToast("Refreshing employee data...", "info");
+        await refetch();
     };
 
     const hasActiveFilters =
@@ -200,7 +226,7 @@ const Employee = () => {
 
             {/* Main Content Area */}
             {isPending ? (
-                <EmployeeSkeletonLoader viewMode={viewMode} count={6} />
+                <EmployeeSkeletonLoader viewMode={viewMode} count={limit} />
             ) : filteredEmployees.length === 0 ? (
                 <EmployeeEmptyState
                     hasFilters={hasActiveFilters}
@@ -210,9 +236,9 @@ const Employee = () => {
             ) : viewMode === "grid" ? (
                 /* Responsive vertical grid layout for employee cards */
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {filteredEmployees.map((emp) => (
+                    {paginatedEmployees.map((emp, idx) => (
                         <EmployeeCard
-                            key={emp._id}
+                            key={emp.email || idx}
                             employee={emp}
                             onView={handleViewDetail}
                             onEdit={handleOpenEditForm}
@@ -222,10 +248,22 @@ const Employee = () => {
                 </div>
             ) : (
                 <EmployeeTable
-                    employees={filteredEmployees}
+                    employees={paginatedEmployees}
                     onView={handleViewDetail}
                     onEdit={handleOpenEditForm}
                     onDelete={handleOpenDelete}
+                />
+            )}
+
+            {/* Pagination Controls */}
+            {!isPending && totalItems > 0 && (
+                <EmployeePagination
+                    currentPage={validPage}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    itemsPerPage={limit}
+                    onPageChange={setPage}
+                    isPlaceholderData={isPlaceholderData}
                 />
             )}
 
@@ -239,16 +277,6 @@ const Employee = () => {
                 }}
                 onEdit={handleOpenEditForm}
                 onDelete={handleOpenDelete}
-            />
-
-            <EmployeeFormModal
-                isOpen={isFormOpen}
-                onClose={() => {
-                    setIsFormOpen(false);
-                    setFormEmployee(null);
-                }}
-                onSubmit={handleSaveEmployee}
-                employee={formEmployee}
             />
 
             <EmployeeDeleteDialog

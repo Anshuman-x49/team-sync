@@ -1,11 +1,8 @@
-import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+﻿import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faEye,
     faPenToSquare,
     faTrashCan,
-    faCopy,
-    faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import type { Employee } from "../../hooks/useEmployee";
 import StatusBadge from "./StatusBadge";
@@ -40,15 +37,6 @@ const EmployeeTable = ({
     onEdit,
     onDelete,
 }: EmployeeTableProps) => {
-    const [copiedId, setCopiedId] = useState<string | null>(null);
-
-    const handleCopyId = (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(id);
-        setCopiedId(id);
-        setTimeout(() => setCopiedId(null), 2000);
-    };
-
     return (
         <div className="overflow-hidden rounded-2xl border border-(--border) bg-(--surface) shadow-sm w-full max-w-full">
             <div className="overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden w-full max-w-full">
@@ -82,9 +70,9 @@ const EmployeeTable = ({
 
                     {/* Table Body */}
                     <tbody className="divide-y divide-(--border)">
-                        {employees.map((employee) => (
+                        {employees.map((employee, idx) => (
                             <tr
-                                key={employee._id}
+                                key={employee.email || idx}
                                 onClick={() => onView(employee)}
                                 className="group transition-colors hover:bg-(--surface-high)/50 cursor-pointer"
                             >
@@ -96,30 +84,8 @@ const EmployeeTable = ({
                                             name={employee.name}
                                             size="md"
                                         />
-                                        <div>
-                                            <div className="font-semibold text-(--text) group-hover:text-(--primary) transition-colors">
-                                                {employee.name || "Unnamed"}
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-(--text-muted)">
-                                                <span className="font-mono text-[11px]">
-                                                    ID: #{employee._id ? employee._id.slice(-6) : "------"}
-                                                </span>
-                                                {employee._id && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => handleCopyId(e, employee._id)}
-                                                        title="Copy full ID"
-                                                        className="hover:text-(--text) cursor-pointer p-0.5"
-                                                    >
-                                                        <FontAwesomeIcon
-                                                            icon={copiedId === employee._id ? faCheck : faCopy}
-                                                            className={`h-2.5 w-2.5 ${
-                                                                copiedId === employee._id ? "text-emerald-400" : ""
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                )}
-                                            </div>
+                                        <div className="font-semibold text-(--text) group-hover:text-(--primary) transition-colors">
+                                            {employee.name || "Unnamed"}
                                         </div>
                                     </div>
                                 </td>

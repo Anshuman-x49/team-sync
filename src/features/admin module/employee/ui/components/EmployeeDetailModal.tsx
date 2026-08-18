@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faXmark,
@@ -6,7 +6,6 @@ import {
     faCheck,
     faCalendarDays,
     faClock,
-    faIdCard,
     faPenToSquare,
     faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
@@ -102,36 +101,12 @@ const EmployeeDetailModal = ({
                 {/* Content Body */}
                 <div className="p-6">
                     <div className="space-y-6">
-                        {/* Primary Attributes Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* ID Card */}
-                            <div className="rounded-2xl border border-(--border) bg-(--surface-low) p-4">
-                                <div className="flex items-center justify-between text-xs text-(--text-muted) mb-1">
-                                    <span className="flex items-center gap-1.5 font-medium">
-                                        <FontAwesomeIcon icon={faIdCard} className="h-3.5 w-3.5 text-(--primary)" />
-                                        Record ID (_id)
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(employee._id, "_id")}
-                                        className="text-(--text-muted) hover:text-(--text) cursor-pointer flex items-center gap-1 text-[11px]"
-                                    >
-                                        <FontAwesomeIcon icon={copiedField === "_id" ? faCheck : faCopy} className={copiedField === "_id" ? "text-emerald-400" : ""} />
-                                        <span>{copiedField === "_id" ? "Copied" : "Copy"}</span>
-                                    </button>
-                                </div>
-                                <p className="font-mono text-sm font-semibold text-(--text) break-all">
-                                    {employee._id}
-                                </p>
+                        {/* Primary Attribute: Department Card */}
+                        <div className="rounded-2xl border border-(--border) bg-(--surface-low) p-4">
+                            <div className="text-xs text-(--text-muted) font-medium mb-2">
+                                Department
                             </div>
-
-                            {/* Department Card */}
-                            <div className="rounded-2xl border border-(--border) bg-(--surface-low) p-4">
-                                <div className="text-xs text-(--text-muted) font-medium mb-2">
-                                    Department
-                                </div>
-                                <DepartmentBadge department={employee.department} />
-                            </div>
+                            <DepartmentBadge department={employee.department} />
                         </div>
 
                         {/* Secondary Attributes List */}

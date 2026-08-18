@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faEnvelope,
@@ -80,9 +80,6 @@ const EmployeeCard = ({
                     </h3>
                     <div className="mt-1 flex items-center justify-between gap-2">
                         <DepartmentBadge department={employee.department} />
-                        <span className="text-[11px] font-mono text-(--text-muted) truncate max-w-25" title={employee._id}>
-                            #{employee._id ? employee._id.slice(-6) : "------"}
-                        </span>
                     </div>
                 </div>
 
